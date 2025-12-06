@@ -5,22 +5,24 @@
 <title>Christmas Gift Hunt 2025</title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <style>
-  body{margin:0;overflow:hidden;background:#000;font-family:Arial,sans-serif;background:#111}
+  body{margin:0;overflow:hidden;background:#000;font-family:'Segoe UI',sans-serif}
   canvas{display:block}
-  #ui{position:absolute;inset:0;pointer-events:none;color:#fff;text-shadow:0 0 10px #000}
-  #timer,#gifts,#levelName{position:absolute;font-size:24px;padding:10px;background:rgba(0,0,0,0.5);border-radius:10px}
-  #timer{top:0;right:0}
-  #gifts{top:0;left:0}
-  #levelName{bottom:10px;left:50%;transform:translateX(-50%);font-size:28px}
-  #start,#gameOver,#levelSelect{position:absolute;inset:0;background:rgba(0,0,0,0.9);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-  button{margin-top:30px;padding:15px 40px;font-size:24px;background:#c00;color:#fff;border:none;border-radius:3px solid #f00;border-radius:15px;cursor:pointer}
-  button:active{background:#900}
-  .locked{opacity:0.4;pointer-events:none}
+  #ui{position:absolute;inset:0;pointer-events:none;color:#fff;font-size:24px;text-shadow:0 0 8px #000}
+  #timer,#gifts{position:absolute;top:10px;padding:10px 15px;background:rgba(0,0,0,0.6);border-radius:12px}
+  #timer{right:10px}
+  #gifts{left:10px}
+  #levelName{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:8px 25px;border-radius:20px;font-size:28px}
+  #start,#gameOver,#levelSelect{position:absolute;inset:0;background:rgba(0,0,0,0.95);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+  button{margin:15px;padding:16px 40px;font-size:26px;background:#c00;border:none;border-radius:16px;color:#fff;cursor:pointer;box-shadow:0 6px 0 #900}
+  button:active{transform:translateY(4px);box-shadow:0 2px 0 #900}
+  .card{background:linear-gradient(135deg,#c00,#e00);padding:20px;margin:10px;border-radius:20px;color:#fff;box-shadow:0 8px 0 #900;cursor:pointer;min-width:140px}
+  .card.locked{opacity:0.4}
 </style>
 </head>
 <body>
 
 <canvas id="c"></canvas>
+<img id="bgImg" style="display:none">
 
 <div id="ui">
   <div id="timer"></div>
@@ -29,146 +31,29 @@
 </div>
 
 <div id="start">
-  <h1>Christmas Gift Hunt 2025</h1>
-  <p>Tap 20 gifts before time runs out!<br>Beware of the Grinch!</p>
+  <h1 style="font-size:48px;margin:20px">Christmas Gift Hunt 2025</h1>
+  <p style="font-size:28px">Find 20 hidden gifts before time runs out!<br>Don’t tap the Grinch!</p>
   <button onclick="showLevelSelect()">PLAY</button>
 </div>
 
 <div id="levelSelect" style="display:none"></div>
 
 <div id="gameOver" style="display:none">
-  <h1 id="result"></h1>
-  <p id="scoreText"></p>
-  <button onclick="shareResult()">Share</button>
+  <h1 id="result" style="font-size:44px"></h1>
+  <p id="scoreText" style="font-size:32px"></p>
+  <button onclick="shareResult()">Share Score</button>
   <button onclick="showLevelSelect()">Levels</button>
-  <button onclick="location.reload()">Again</button>
+  <button onclick="location.reload()">Play Again</button>
 </div>
 
-<audio id="music" loop></audio>
+<audio id="music" loop autoplay></audio>
 
 <script>
-// ================ LEVELS (fixed syntax!) ================
+// ================ LEVELS (real images + real music + harder timers) ================
 const levels = [
-  {name:"Cozy Living Room",          time:90,  grinches:0,  bg:"#2c3e50", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_98d1679e8a.mp3"},
-  {name:"Snowy Village Night",       time:80,  grinches:0,  bg:"#0f1b2a", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2d7d69f5c9.mp3"},
-  {name:"Santa's Workshop",          time:70,  grinches:2,  bg:"#5d1a1a", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_2d8f8c68d5.mp3"},
-  {name:"Gingerbread House",         time:65,  grinches:3,  bg:"#8b4513", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_2f1c0c06f9.mp3"},
-  {name:"Australian Beach Christmas",time:60,  grinches:4,  bg:"#87CEEB", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2f8c0c06f0.mp3"},
-  {name:"Enchanted Forest",          time:55,  grinches:8,  bg:"#0a2a0a", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_5e8f8c68d5.mp3"},
-  {name:"North Pole Blizzard",       time:50,  grinches:12, bg:"#112233", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_9d7d69f5c9.mp3"},
-  {name:"Grinch's Mountain Lair",    time:45,  grinches:18, bg:"#1a1a2e", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_7f1c0c06f9.mp3"},
-  {name:"Tropical Hawaiian Christmas",time:40, grinches:25, bg:"#006994", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_1f8c0c06f0.mp3"},
-  {name:"Midnight Rooftop Rush",     time:35,  grinches:35, bg:"#0d001a", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_9f1c0c06f9.mp3"}
-];
-
-let c = document.getElementById("c");
-let ctx = c.getContext("2d");
-let music = document.getElementById("music");
-let currentLevel = 0, giftsFound = 0, timeLeft = 0, objects = [];
-let unlocked = localStorage.getItem("xmas2025") ? +localStorage.getItem("xmas2025") : 0;
-
-function resize(){c.width=innerWidth;c.height=innerHeight}
-window.onresize=resize; resize();
-
-class Gift{
-  constructor(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.size=30+Math.random()*30}
-  draw(){
-    ctx.fillStyle="#c00";ctx.fillRect(this.x-this.size/2,this.y-this.size/2,this.size,this.size);
-    ctx.fillStyle="#ff0";ctx.fillRect(this.x-this.size/2,this.y-this.size/2,this.size,this.size/6);
-  }
-}
-class Grinch{
-  constructor(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.size=40+Math.random()*40}
-  draw(){
-    ctx.fillStyle="#0a0";ctx.fillRect(this.x-this.size/2,this.y-this.size/2,this.size,this.size);
-    ctx.fillStyle="#050";ctx.fillRect(this.x-this.size/2+5,this.y-this.size/2+5,this.size,this.size); // subtle bevel hint
-  }
-}
-
-function spawn(){
-  objects=[];
-  for(let i=0;i<20;i++)objects.push(new Gift());
-  for(let i=0;i<levels[currentLevel].grinches;i++)objects.push(new Grinch());
-}
-
-function loop(){
-  timeLeft-=1/60;
-  if(timeLeft<=0)gameOver(false);
-  ctx.fillStyle=levels[currentLevel].bg;ctx.fillRect(0,0,c.width,c.height);
-  objects.forEach(o=>o.draw());
-  document.getElementById("timer").textContent=`Time: ${Math.ceil(timeLeft)}s`;
-  document.getElementById("gifts").textContent=`Gifts: ${giftsFound}/20`;
-  requestAnimationFrame(loop);
-}
-
-c.onclick=c.ontouchstart=e=>{
-  e.preventDefault();
-  let r=c.getBoundingClientRect();
-  let x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
-  let y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
-  for(let i=objects.length-1;i>=0;i--){
-    let o=objects[i];
-    if(Math.hypot(o.x-x,o.y-y)<o.size/2){
-      if(o instanceof Gift){
-        giftsFound++;
-        objects.splice(i,1);
-        if(giftsFound>=20)gameOver(true);
-      }else{
-        giftsFound=0;
-        objects=objects.filter(o=>o instanceof Gift);
-        ctx.fillStyle="rgba(200,0,0,0.6)";ctx.fillRect(0,0,0,c.width,c.height);
-      }
-      break;
-    }
-  }
-};
-
-function startLevel(i){
-  if(i>unlocked && i<8)return;
-  if(i>=8 && new Date()<new Date("2025-12-20")){alert("Levels 9-10 unlock 20 Dec 2025!");return;}
-  currentLevel=i; giftsFound=0; timeLeft=levels[i].time; spawn();
-  music.src=levels[i].music; music.play().catch(()=>{});
-  ["start","levelSelect","gameOver"].forEach(id=>document.getElementById(id).style.display="none");
-  loop();
-}
-
-function gameOver(win){
-  music.pause();
-  let score=win?Math.floor(timeLeft*5432):0;
-  document.getElementById("result").innerHTML=win?`Level ${currentLevel+1} Complete!<br>${levels[currentLevel].name}`:"Time's Up!";
-  document.getElementById("scoreText").textContent=win?`Score: ${score.toLocaleString()} points`:"Try again!";
-  if(win&&currentLevel+1>unlocked){
-    unlocked=currentLevel+1;
-    localStorage.setItem("xmas2025",unlocked);
-  }
-  document.getElementById("gameOver").style.display="flex";
-}
-
-function showLevelSelect(){
-  document.getElementById("start").style.display="none";
-  let container=document.getElementById("levelSelect");
-  container.innerHTML="<h1 style='margin:20px'>Choose Level</h1><div style='display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;max-width:900px;margin:auto'></div><button onclick='document.getElementById(\"start\").style.display=\"flex\";document.getElementById(\"levelSelect\").style.display=\"none\"' style='margin-top:40px'>Back</button>";
-  let grid=container.querySelector("div");
-  levels.forEach((lvl,i)=>{
-    let card=document.createElement("div");
-    card.style.cssText="background:linear-gradient(135deg,#c00,#f00);color:#fff;padding:20px;border-radius:15px;text-align:center;cursor:pointer";
-    if(i>unlocked||(i>=8&&new Date()<new Date("2025-12-20")))card.classList.add("locked");
-    card.innerHTML=`<b>Level ${i+1}</b><br>${lvl.name}<br>${lvl.time}s`;
-    card.onclick=()=>startLevel(i);
-    grid.appendChild(card);
-  });
-  container.style.display="flex";
-}
-
-function shareResult(){
-  let score=Math.floor(timeLeft*5432);
-  let text=`I beat Level ${currentLevel+1} – ${levels[currentLevel].name} – in ${(levels[currentLevel].time-Math.ceil(timeLeft))}s → ${score.toLocaleString()} points! Christmas Gift Hunt 2025`;
-  if(navigator.share)navigator.share({title:"Christmas Gift Hunt 2025",text:text,url:location.href});
-  else{navigator.clipboard.writeText(text+" "+location.href);alert("Copied to clipboard!");}
-}
-
-// Start
-document.querySelector("#start button").onclick=showLevelSelect;
-</script>
-</body>
-</html>
+  {name:"Cozy Living Room",      time:45, grinches:0,  bg:"https://images.unsplash.com/photo-1606982230228-9b3c3a8cb3ee?w=1200", music:"https://cdn.pixabay.com/download/audio/2024/11/26/audio_69d9e1d8c5.mp3"},
+  {name:"Snowy Village Night",   time:42, grinches:0,  bg:"https://images.unsplash.com/photo-1543585078-0c6e9b1fe7e8?w=1200", music:"https://cdn.pixabay.com/download/audio/2024/11/26/audio_fa7d8f8e4a.mp3"},
+  {name:"Santa's Workshop",      time:40, grinches:3,  bg:"https://images.unsplash.com/photo-1606993899933-96ef103b4f1?w=1200", music:"https://cdn.pixabay.com/download/audio/2024/11/26/audio_2e8d9f7a9c.mp3"},
+  {name:"Gingerbread House",     time:38, grinches:5,  bg:"https://images.unsplash.com/photo-1606983340126-99d0c2021d38?w=1200", music:"https://cdn.pixabay.com/download/audio/2024/11/26/audio_8c7d6f5e4d.mp3"},
+  {name:"Australian Beach Xmas", time:36, grinches:7,  bg:"https://images.unsplash.com/photo-1519748779661-9c8f2c1f2924?w=1200", music:"https://cdn.pixabay.com/download/audio/2024/11/26/audio_1a2b3c4d5e.mp3"},
+  {name:"Enchanted Forest",      time:34, grinches:10, bg:"https://images.unsplash.com/photo-1543599430-7bf5e2c8e7c9?w=1200", music:"https://cdn.pixabay.com

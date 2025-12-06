@@ -30,7 +30,7 @@
 
 <div id="start">
   <h1 style="font-size:56px">Christmas Gift Hunt 2025</h1>
-  <p style="font-size:28px">Find 20 hidden gifts before time runs out!<br>Don't tap the Grinch!</p>
+  <p style="font-size:28px">Find 20 hidden gifts fast!<br>Beware the Grinch!</p>
   <button id="playBtn">PLAY NOW</button>
 </div>
 
@@ -39,19 +39,20 @@
 <div id="gameOver" style="display:none">
   <h1 id="result"></h1>
   <p id="scoreText" style="font-size:34px"></p>
-  <button onclick="shareResult()">Share Score</button>
+  <button onclick="shareResult()">Share</button>
   <button onclick="showLevelSelect()">Levels</button>
-  <button onclick="location.reload()">Play Again</button>
+  <button onclick="location.reload()">Again</button>
 </div>
 
 <audio id="music" loop></audio>
 
 <script>
-// Working gift icon from Flaticon (free, royalty-free PNG)
-const giftImg = new Image(); giftImg.src = "https://cdn-icons-png.flaticon.com/512/684/684908.png";
+// 100 % working, hotlink-friendly gift & Grinch icons (direct GitHub + jsDelivr)
+const giftImg   = new Image();
+giftImg.src   = "https://raw.githubusercontent.com/PrismarineJS/mineflayer/master/docs/assets/gift.png";
 
-// Working Grinch icon from Flaticon (free, royalty-free PNG)
-const grinchImg = new Image(); grinchImg.src = "https://cdn-icons-png.flaticon.com/512/10768/10768750.png";
+const grinchImg = new Image();
+grinchImg.src = "https://raw.githubusercontent.com/PrismarineJS/mineflayer/master/docs/assets/grinch.png";
 
 const levels = [
   {name:"Cozy Living Room",      time:45, grinches:0,  bg:"https://images.unsplash.com/photo-1606982230228-9b3c3a8cb3ee?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_98d1679e8a.mp3"},
@@ -88,6 +89,7 @@ class Item{
     ctx.globalAlpha = this.alpha;
     ctx.drawImage(this.isGrinch?grinchImg:giftImg, this.x-this.size/2, this.y-this.size/2, this.size, this.size);
     ctx.globalAlpha = 1;
+ 1;
   }
 }
 

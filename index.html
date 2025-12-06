@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <title>Christmas Gift Hunt 2025</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-  body,html{margin:0;height:100%;overflow:hidden;background:#000}
-  canvas{display:block;width:100%;height:100%}
-  #ui{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 0 8px #000;z-index:2}
-  #timer,#gifts{position:fixed;top:15px;padding:10px 20px;background:rgba(0,0,0,0.6);border-radius:15px;font-size:24px}
-  #timer{right:15px} #gifts{left:15px}
-  #levelName{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 30px;border-radius:25px;font-size:30px}
-  #start,#gameOver,#levelSelect{position:fixed;inset:0;background:rgba(0,0,0,0.94);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;z-index:10}
-  button{margin:20px;padding:18px 55px;font-size:30px;background:#c00;color:#fff;border:none;border-radius:18px;cursor:pointer;box-shadow:0 8px #900}
-  button:active{transform:translateY(4px);box-shadow:0 4px #900}
-  .card{background:linear-gradient(135deg,#c00,#f44);padding:28px;margin:12px;border-radius:22px;color:#fff;box-shadow:0 12px #900;cursor:pointer;min-width:170px}
-  .card.locked{opacity:0.35}
+body { margin: 0; overflow: hidden; background: #000; font-family: Arial, sans-serif; touch-action: manipulation; }
+canvas { display: block; }
+#ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+#timer, #gifts, #levelName { position: absolute; font-size: 24px; padding: 10px; pointer-events: auto; background: rgba(0,0,0,0.5); border-radius: 10px; }
+#timer { top: 10px; right: 10px; }
+#gifts { top: 10px; left: 10px; }
+#levelName { bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 15px 15px 0 0; font-size: 28px; }
+#start, #gameOver, #levelSelect { position: absolute; inset: 0; background: rgba(0,0,0,0.85); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 32px; pointer-events: auto; }
+button { margin-top: 30px; padding: 15px 40px; font-size: 24px; background: #c00; color: white; border: none; border-radius: 12px; cursor: pointer; }
+button:active { background: #900; }
+.card { background: linear-gradient(135deg, #c00, #f00); color: white; padding: 20px; border-radius: 15px; text-align: center; cursor: pointer; margin: 10px; min-width: 150px; }
+.card.locked { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -23,178 +24,227 @@
 <canvas id="c"></canvas>
 
 <div id="ui">
-  <div id="timer">Time: 0s</div>
-  <div id="gifts">Gifts: 0/20</div>
+  <div id="timer"></div>
+  <div id="gifts"></div>
   <div id="levelName"></div>
 </div>
 
 <div id="start">
-  <h1 style="font-size:56px;margin:20px">Christmas Gift Hunt 2025</h1>
-  <p style="font-size:28px">Find 20 hidden gifts before time runs out!<br>Beware the Grinch!</p>
-  <button id="playBtn">PLAY NOW</button>
+  <h1>Christmas Gift Hunt 2025</h1>
+  <p>Tap 20 gifts before time runs out!<br>Watch for the Grinch traps!</p>
+  <button id="playBtn">PLAY</button>
 </div>
 
-<div id="levelSelect" style="display:none"></div>
-<div id="gameOver" style="display:none">
+<div id="levelSelect" style="display: none;">
+  <h1 style="margin: 20px">Choose Level</h1>
+  <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; max-width: 900px; margin: auto;"></div>
+  <button onclick="backToMenu()">← Back</button>
+</div>
+
+<div id="gameOver" style="display: none;">
   <h1 id="result"></h1>
-  <p id="scoreText" style="font-size:34px"></p>
-  <button onclick="shareResult()">Share</button>
-  <button onclick="showLevelSelect()">Levels</button>
-  <button onclick="location.reload()">Again</button>
+  <p id="scoreText"></p>
+  <button onclick="shareResult()">Share Result</button>
+  <button onclick="showLevelSelect()">Level Select</button>
+  <button onclick="location.reload()">Play Again</button>
 </div>
 
 <audio id="music" loop></audio>
 
 <script>
-// 100% working images (direct GitHub CDN – never blocked)
-const GIFT_IMG   = "https://github.com/ekzhang/graphics/raw/master/christmas-gift.png";
-const GRINCH_IMG = "https://github.com/ekzhang/graphics/raw/master/grinch.png";
-
-const giftImg   = new Image(); giftImg.src   = GIFT_IMG;
-const grinchImg = new Image(); grinchImg.src = GRINCH_IMG;
-
 const levels = [
-  {name:"Cozy Living Room",      time:45, grinches:0,  bg:"https://images.unsplash.com/photo-1606982230228-9b3c3a8cb3ee?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_98d1679e8a.mp3"},
-  {name:"Snowy Village Night",   time:42, grinches:0,  bg:"https://images.unsplash.com/photo-1543585078-0c6e9b1fe7e8?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2d7d69f5c9.mp3"},
-  {name:"Santa's Workshop",      time:40, grinches:3,  bg:"https://images.unsplash.com/photo-1606993899933-96ef103b4f1?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_2d8f8c68d5.mp3"},
-  {name:"Gingerbread House",     time:38, grinches:5,  bg:"https://images.unsplash.com/photo-1606983340126-99d0c2021d38?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_2f1c0c06f9.mp3"},
-  {name:"Australian Beach Xmas", time:36, grinches:7,  bg:"https://images.unsplash.com/photo-1519748779661-9c8f2c1f2924?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2f8c0c06f0.mp3"},
-  {name:"Enchanted Forest",      time:34, grinches:10, bg:"https://images.unsplash.com/photo-1543599430-7bf5e2c8e7c9?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_5e8f8c68d5.mp3"},
-  {name:"North Pole Blizzard",   time:32, grinches:14, bg:"https://images.unsplash.com/photo-1517694719679-0ce2d2c8e8e6?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_9d7d69f5c9.mp3"},
-  {name:"Grinch's Lair",         time:30, grinches:20, bg:"https://images.unsplash.com/photo-1606921236453-5d25a38e94c9?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_7f1c0c06f9.mp3"},
-  {name:"Hawaiian Christmas",    time:28, grinches:28, bg:"https://images.unsplash.com/photo-1536590155303-9c3c8c2bbfbc?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_1f8c0c06f0.mp3"},
-  {name:"Rooftop Rush",          time:25, grinches:40, bg:"https://images.unsplash.com/photo-1489009154095-7d3c6c3d3d3d?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_9f1c0c06f9.mp3.mp3"}
+  { name: "Cozy Living Room", time: 45, grinches: 0, bg: "#8B4513", music: "https://cdn.pixabay.com/download/audio/2022/11/08/audio_98d1679e8a.mp3" },
+  { name: "Snowy Village Night", time: 42, grinches: 0, bg: "#4682B4", music: "https://cdn.pixabay.com/download/audio/2023/11/27/audio_2d7d69f5c9.mp3" },
+  { name: "Santa's Workshop", time: 40, grinches: 3, bg: "#CD853F", music: "https://cdn.pixabay.com/download/audio/2022/11/08/audio_2d8f8c68d5.mp3" },
+  { name: "Gingerbread House", time: 38, grinches: 5, bg: "#D2691E", music: "https://cdn.pixabay.com/download/audio/2023/12/05/audio_2f1c0c06f9.mp3" },
+  { name: "Australian Beach Xmas", time: 36, grinches: 7, bg: "#87CEEB", music: "https://cdn.pixabay.com/download/audio/2023/11/27/audio_2f8c0c06f0.mp3" },
+  { name: "Enchanted Forest", time: 34, grinches: 10, bg: "#228B22", music: "https://cdn.pixabay.com/download/audio/2023/12/05/audio_5e8f8c68d5.mp3" },
+  { name: "North Pole Blizzard", time: 32, grinches: 14, bg: "#4169E1", music: "https://cdn.pixabay.com/download/audio/2023/11/27/audio_9d7d69f5c9.mp3" },
+  { name: "Grinch's Lair", time: 30, grinches: 20, bg: "#2F4F4F", music: "https://cdn.pixabay.com/download/audio/2023/12/05/audio_7f1c0c06f9.mp3" },
+  { name: "Hawaiian Christmas", time: 28, grinches: 28, bg: "#20B2AA", music: "https://cdn.pixabay.com/download/audio/2023/11/27/audio_1f8c0c06f0.mp3" },
+  { name: "Rooftop Rush", time: 25, grinches: 40, bg: "#191970", music: "https://cdn.pixabay.com/download/audio/2023/12/05/audio_9f1c0c06f9.mp3" }
 ];
 
-let c = document.getElementById("c");
-let ctx = c.getContext("2d");
+let canvas = document.getElementById("c");
+let ctx = canvas.getContext("2d");
 let music = document.getElementById("music");
-let currentLevel = 0, giftsFound = 0, timeLeft = 0, objects = [];
-let unlocked = +(localStorage.getItem("xmas2025") || 0);
-let bgImg = new Image();
+let currentLevel = 0;
+let giftsFound = 0;
+let timeLeft = 0;
+let objects = [];
+let unlockedLevel = localStorage.getItem("xmasHunt2025") ? parseInt(localStorage.getItem("xmasHunt2025")) : 0;
+let gameRunning = false;
 
-function resize(){c.width=innerWidth;c.height=innerHeight;}
-window.onresize=resize; resize();
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-class Item{
-  constructor(isGrinch=false){
-    this.isGrinch=isGrinch;
-    this.x = 80 + Math.random()*(c.width-160);
-    this.y = 80 + Math.random()*(c.height-160);
-    this.size = isGrinch ? 80 : 70;
-    this.alpha = isGrinch ? 0.38 : 0.52;   // Grinch almost invisible
+class Gift {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = 40 + Math.random() * 20;
   }
-  draw(){
-    ctx.globalAlpha = this.alpha;
-    ctx.drawImage(this.isGrinch ? grinchImg : giftImg, this.x-this.size/2, this.y-this.size/2, this.size, this.size);
-    ctx.globalAlpha = 1;
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = 0.6; // Subtle transparency for "hiding"
+    ctx.fillStyle = "#DC143C"; // Red box
+    ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+    ctx.fillStyle = "#FFD700"; // Gold ribbon
+    ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size / 6);
+    ctx.restore();
   }
 }
 
-function spawn = () => {
-  objects = [];
-  for(let i=0;i<20;i++) objects.push(new Item(false));
-  for(let i=0;i<levels[currentLevel].grinches;i++) objects.push(new Item(true));
-};
+class Grinch {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = 50 + Math.random() * 30;
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = 0.4; // Very subtle
+    ctx.fillStyle = "#006400"; // Dark green
+    ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+    // Subtle bevel hint on edges
+    ctx.fillStyle = "#004d00";
+    ctx.fillRect(this.x - this.size / 2 + 3, this.y - this.size / 2 + 3, this.size - 6, this.size - 6);
+    ctx.restore();
+  }
+}
 
-function draw(){
-  ctx.drawImage(bgImg,0,0,c.width,c.height);
-  objects.forEach(o=>o.draw());
+function spawnObjects() {
+  objects = [];
+  for (let i = 0; i < 20; i++) objects.push(new Gift());
+  for (let i = 0; i < levels[currentLevel].grinches; i++) objects.push(new Grinch());
+}
+
+function draw() {
+  // Background
+  ctx.fillStyle = levels[currentLevel].bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Objects
+  objects.forEach(o => o.draw());
+  // UI
   document.getElementById("timer").textContent = `Time: ${Math.ceil(timeLeft)}s`;
   document.getElementById("gifts").textContent = `Gifts: ${giftsFound}/20`;
   document.getElementById("levelName").textContent = levels[currentLevel].name;
 }
 
-let raf;
-function loop(){
-  timeLeft -= 1/60;
-  if(timeLeft <= 0) return gameOver(false);
+function gameLoop() {
+  if (!gameRunning) return;
+  timeLeft -= 1 / 60;
+  if (timeLeft <= 0) {
+    gameOver(false);
+    return;
+  }
   draw();
-  raf = requestAnimationFrame(loop);
+  requestAnimationFrame(gameLoop);
 }
 
-c.onclick = c.ontouchstart = e => {
-  e.preventDefault();
-  let r = c.getBoundingClientRect();
-  let x = (e.touches?.[0].clientX || e.clientX) - r.left;
-  let y = (e.touches?.[0].clientY || e.clientY) - r.top;
-  for(let i=objects.length-1;i>=0;i--){
-    let o = objects[i];
-    if(Math.hypot(o.x-x,o.y-y) < o.size/2){
-      if(o.isGrinch){
-        giftsFound = 0;
-        spawn();
-        ctx.fillStyle="rgba(180,0,0,0.6)"; ctx.fillRect(0,0,c.width,c.height);
-      }else{
+canvas.addEventListener('click', (e) => {
+  if (!gameRunning) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  for (let i = objects.length - 1; i >= 0; i--) {
+    const obj = objects[i];
+    if (Math.hypot(obj.x - x, obj.y - y) < obj.size / 2) {
+      if (obj instanceof Gift) {
         giftsFound++;
-        objects.splice(i,1);
-        if(giftsFound>=20) gameOver(true);
+        objects.splice(i, 1);
+        if (giftsFound >= 20) gameOver(true);
+      } else { // Grinch trap
+        giftsFound = 0;
+        spawnObjects(); // Respawn gifts in new spots - lose time!
+        // Flash screen red
+        ctx.fillStyle = "rgba(255,0,0,0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
       break;
     }
   }
-};
-
-function startLevel(i){
-  currentLevel = i;
-  giftsFound = 0;
-  timeLeft = levels[i].time;
-  bgImg.src = levels[i].bg;
-  bgImg.onload = () => {
-    music.src = levels[i].music;
-    music.play().catch(()=>{});
-    spawn();
-    document.getElementById("start").style.display = "none";
-    document.getElementById("levelSelect").style.display = "none";
-    document.getElementById("gameOver").style.display = "none";
-    cancelAnimationFrame(raf);
-    draw();
-    loop();
-  };
-}
-
-function gameOver(win){
-  cancelAnimationFrame(raf);
-  music.pause();
-  let score = win ? Math.floor(timeLeft*5432) : 0;
-  document.getElementById("result").innerHTML = win ? `Level ${currentLevel+1} Complete!<br>${levels[currentLevel].name}` : "Time's Up!";
-  document.getElementById("scoreText").textContent = win ? `Score: ${score.toLocaleString()} points` : "";
-  if(win && currentLevel+1 > unlocked){
-    unlocked = currentLevel+1;
-    localStorage.setItem("xmas2025",unlocked);
-  }
-  document.getElementById("gameOver").style.display="flex";
-}
-
-function showLevelSelect(){
-  document.getElementById("start").style.display="none";
-  let sel = document.getElementById("levelSelect");
-  sel.innerHTML = `<h1 style="font-size:50px;margin:30px">Choose Level</h1>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;max-width:1100px;padding:20px;overflow:auto"></div>
-    <button onclick="location.reload()" style="margin-top:30px">Back</button>`;
-  let grid = sel.querySelector("div");
-  levels.forEach((lvl,i)=>{
-    let card = document.createElement("div");
-    card.className = "card" + (i>unlocked ? " locked" : "");
-    card.innerHTML = `<div style="font-size:46px;font-weight:bold">${i+1}</div>${lvl.name}<br><small>${lvl.time}s • ${lvl.grinches} Grinches</small>`;
-    card.onclick = () => startLevel(i);
-    grid.appendChild(card);
+});
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const mouseEvent = new MouseEvent('click', {
+    clientX: touch.clientX,
+    clientY: touch.clientY
   });
-  sel.style.display="flex";
+  canvas.dispatchEvent(mouseEvent);
+});
+
+function startLevel(idx) {
+  currentLevel = idx;
+  giftsFound = 0;
+  timeLeft = levels[idx].time;
+  gameRunning = true;
+  spawnObjects();
+  music.src = levels[idx].music;
+  music.play().catch(() => {});
+
+  document.getElementById("start").style.display = "none";
+  document.getElementById("levelSelect").style.display = "none";
+  document.getElementById("gameOver").style.display = "none";
+  document.getElementById("ui").style.pointerEvents = "auto";
+
+  gameLoop();
 }
 
-function shareResult(){
-  let score = Math.floor(timeLeft*5432);
-  let text = `I crushed Level ${currentLevel+1} — ${levels[currentLevel].name} — ${score.toLocaleString()} points! Christmas Gift Hunt 2025`;
-  if(navigator.share) navigator.share({title:"Christmas Gift Hunt",text,url:location.href});
-  else {navigator.clipboard.writeText(text+" "+location.href); alert("Copied!");}
+function gameOver(win) {
+  gameRunning = false;
+  music.pause();
+  let score = win ? Math.floor(timeLeft * 5432) : 0;
+  let text = win ? `Level ${currentLevel + 1} Complete!<br>${levels[currentLevel].name}` : "Time's up! Grinch wins!";
+  document.getElementById("result").innerHTML = text;
+  document.getElementById("scoreText").textContent = win ? `Score: ${score.toLocaleString()} points` : "Better luck next time!";
+
+  if (win && currentLevel + 1 > unlockedLevel) {
+    unlockedLevel = currentLevel + 1;
+    localStorage.setItem("xmasHunt2025", unlockedLevel);
+  }
+
+  document.getElementById("gameOver").style.display = "flex";
 }
 
-// PLAY BUTTON – THIS LINE MAKES IT WORK
+function showLevelSelect() {
+  document.getElementById("start").style.display = "none";
+  const container = document.querySelector("#levelSelect .grid");
+  container.innerHTML = "";
+  levels.forEach((lvl, i) => {
+    const div = document.createElement("div");
+    div.className = "card" + (i > unlockedLevel ? " locked" : "");
+    div.innerHTML = `<b>Level ${i + 1}</b><br>${lvl.name}<br>${lvl.time}s`;
+    if (i <= unlockedLevel) div.onclick = () => startLevel(i);
+    container.appendChild(div);
+  });
+  document.getElementById("levelSelect").style.display = "flex";
+}
+
+function backToMenu() {
+  document.getElementById("levelSelect").style.display = "none";
+  document.getElementById("start").style.display = "flex";
+}
+
+function shareResult() {
+  const score = Math.floor(timeLeft * 5432);
+  const text = `I beat Level ${currentLevel + 1} in ${Math.ceil(levels[currentLevel].time - timeLeft)}s with ${score.toLocaleString()} points on Christmas Gift Hunt 2025!`;
+  if (navigator.share) {
+    navigator.share({ title: "Christmas Gift Hunt", text, url: location.href });
+  } else {
+    navigator.clipboard.writeText(text + " " + location.href);
+    alert("Copied to clipboard!");
+  }
+}
+
+// Init
 document.getElementById("playBtn").onclick = showLevelSelect;
-
-// preload images so they appear instantly
-giftImg.onload = grinchImg.onload = () => {};
 </script>
 </body>
 </html>

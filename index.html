@@ -44,19 +44,18 @@
   <button onclick="location.reload()">Play Again</button>
 </div>
 
-<audio id="music" loop autoplay></audio>
+<audio id="music" loop></audio>
 
 <script>
-// Real working images (hosted on reliable CDN – tested today)
-const GIFT = "https://cdn.jsdelivr.net/gh/ekzhang/graphics@master/christmas-gift.png";
-const GRINCH = "https://cdn.jsdelivr.net/gh/ekzhang/graphics@master/grinch.png";
+// Working gift icon from Flaticon (free, royalty-free PNG)
+const giftImg = new Image(); giftImg.src = "https://cdn-icons-png.flaticon.com/512/684/684908.png";
 
-const giftImg = new Image(); giftImg.src = GIFT;
-const grinchImg = new Image(); grinchImg.src = GRINCH;
+// Working Grinch icon from Flaticon (free, royalty-free PNG)
+const grinchImg = new Image(); grinchImg.src = "https://cdn-icons-png.flaticon.com/512/10768/10768750.png";
 
 const levels = [
   {name:"Cozy Living Room",      time:45, grinches:0,  bg:"https://images.unsplash.com/photo-1606982230228-9b3c3a8cb3ee?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_98d1679e8a.mp3"},
-  {name:"Snowy Village Night",   time:42, grinches:0,  bg:"https://images.unsplash.com/photo-1543585078-0c6e9b1fe7e8?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/audio_2d7d69f5c9.mp3"},
+  {name:"Snowy Village Night",   time:42, grinches:0,  bg:"https://images.unsplash.com/photo-1543585078-0c6e9b1fe7e8?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2d7d69f5c9.mp3"},
   {name:"Santa's Workshop",      time:40, grinches:3,  bg:"https://images.unsplash.com/photo-1606993899933-96ef103b4f1?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_2d8f8c68d5.mp3"},
   {name:"Gingerbread House",     time:38, grinches:5,  bg:"https://images.unsplash.com/photo-1606983340126-99d0c2021d38?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_2f1c0c06f9.mp3"},
   {name:"Australian Beach Xmas", time:36, grinches:7,  bg:"https://images.unsplash.com/photo-1519748779661-9c8f2c1f2924?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2f8c0c06f0.mp3"},
@@ -64,7 +63,7 @@ const levels = [
   {name:"North Pole Blizzard",   time:32, grinches:14, bg:"https://images.unsplash.com/photo-1517694719679-0ce2d2c8e8e6?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_9d7d69f5c9.mp3"},
   {name:"Grinch's Lair",         time:30, grinches:20, bg:"https://images.unsplash.com/photo-1606921236453-5d25a38e94c9?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_7f1c0c06f9.mp3"},
   {name:"Hawaiian Christmas",    time:28, grinches:28, bg:"https://images.unsplash.com/photo-1536590155303-9c3c8c2bbfbc?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_1f8c0c06f0.mp3"},
-  {name:"Rooftop Rush",         time:25, grinches:40, bg:"https://images.unsplash.com/photo-1489009154095-7d3c6c3d3d3d?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_9f1c0c06f9.mp3"}
+  {name:"Rooftop Rush",          time:25, grinches:40, bg:"https://images.unsplash.com/photo-1489009154095-7d3c6c3d3d3d?w=1800&auto=format&fit=crop", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_9f1c0c06f9.mp3"}
 ];
 
 let c = document.getElementById("c");

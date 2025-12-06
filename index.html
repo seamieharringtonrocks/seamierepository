@@ -104,4 +104,71 @@ function loop(){
 c.onclick=c.ontouchstart=e=>{
   e.preventDefault();
   let r=c.getBoundingClientRect();
-  let x=(e.touches?e.touches[0].clientX:e.clientX)-r
+  let x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  let y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+  for(let i=objects.length-1;i>=0;i--){
+    let o=objects[i];
+    if(Math.hypot(o.x-x,o.y-y)<o.size/2){
+      if(o instanceof Gift){
+        giftsFound++;
+        objects.splice(i,1);
+        if(giftsFound>=20)gameOver(true);
+      }else{
+        giftsFound=0;
+        objects=objects.filter(o=>o instanceof Gift);
+        ctx.fillStyle="rgba(200,0,0,0.6)";ctx.fillRect(0,0,0,c.width,c.height);
+      }
+      break;
+    }
+  }
+};
+
+function startLevel(i){
+  if(i>unlocked && i<8)return;
+  if(i>=8 && new Date()<new Date("2025-12-20")){alert("Levels 9-10 unlock 20 Dec 2025!");return;}
+  currentLevel=i; giftsFound=0; timeLeft=levels[i].time; spawn();
+  music.src=levels[i].music; music.play().catch(()=>{});
+  ["start","levelSelect","gameOver"].forEach(id=>document.getElementById(id).style.display="none");
+  loop();
+}
+
+function gameOver(win){
+  music.pause();
+  let score=win?Math.floor(timeLeft*5432):0;
+  document.getElementById("result").innerHTML=win?`Level ${currentLevel+1} Complete!<br>${levels[currentLevel].name}`:"Time's Up!";
+  document.getElementById("scoreText").textContent=win?`Score: ${score.toLocaleString()} points`:"Try again!";
+  if(win&&currentLevel+1>unlocked){
+    unlocked=currentLevel+1;
+    localStorage.setItem("xmas2025",unlocked);
+  }
+  document.getElementById("gameOver").style.display="flex";
+}
+
+function showLevelSelect(){
+  document.getElementById("start").style.display="none";
+  let container=document.getElementById("levelSelect");
+  container.innerHTML="<h1 style='margin:20px'>Choose Level</h1><div style='display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;max-width:900px;margin:auto'></div><button onclick='document.getElementById(\"start\").style.display=\"flex\";document.getElementById(\"levelSelect\").style.display=\"none\"' style='margin-top:40px'>Back</button>";
+  let grid=container.querySelector("div");
+  levels.forEach((lvl,i)=>{
+    let card=document.createElement("div");
+    card.style.cssText="background:linear-gradient(135deg,#c00,#f00);color:#fff;padding:20px;border-radius:15px;text-align:center;cursor:pointer";
+    if(i>unlocked||(i>=8&&new Date()<new Date("2025-12-20")))card.classList.add("locked");
+    card.innerHTML=`<b>Level ${i+1}</b><br>${lvl.name}<br>${lvl.time}s`;
+    card.onclick=()=>startLevel(i);
+    grid.appendChild(card);
+  });
+  container.style.display="flex";
+}
+
+function shareResult(){
+  let score=Math.floor(timeLeft*5432);
+  let text=`I beat Level ${currentLevel+1} – ${levels[currentLevel].name} – in ${(levels[currentLevel].time-Math.ceil(timeLeft))}s → ${score.toLocaleString()} points! Christmas Gift Hunt 2025`;
+  if(navigator.share)navigator.share({title:"Christmas Gift Hunt 2025",text:text,url:location.href});
+  else{navigator.clipboard.writeText(text+" "+location.href);alert("Copied to clipboard!");}
+}
+
+// Start
+document.querySelector("#start button").onclick=showLevelSelect;
+</script>
+</body>
+</html>

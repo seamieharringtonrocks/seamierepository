@@ -46,6 +46,16 @@
     cursor: pointer;
   }
   button:hover { background: #ff1744; }
+  #restartBtn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 100;
+    padding: 10px 18px;
+    font-size: 1em;
+    background: #b71c1c;
+  }
+  #restartBtn:hover { background: #f44336; }
 </style>
 </head>
 <body>
@@ -56,6 +66,7 @@
     <div>Time Left: <span id="timer">30</span>s</div>
     <div>Score: <span id="score">0</span></div>
   </div>
+  <button id="restartBtn" onclick="startGame()">Restart Game</button>
   <canvas id="canvas" width="1000" height="600"></canvas>
   <div id="message">Click Start to begin the holiday madness!</div>
   <button onclick="startGame()">Start Game</button>
@@ -157,7 +168,7 @@ function startGame() {
   score = 0;
   document.getElementById('score').textContent = '0';
   message.textContent = "Find the 20 gifts before time runs out!";
-  document.querySelector('button').style.display = 'none';
+  document.querySelector('button:not(#restartBtn)').style.display = 'none';
   startLevel();
 }
 
@@ -305,6 +316,14 @@ canvas.addEventListener('click', (e) => {
     if (!g.collected && Math.hypot(mx - g.x, my - g.y) < 50) {
       if (g.isGrinch) {
         playSound(120, 0.8, 'sawtooth', 0.3);
+        score -= 20000;
+        document.getElementById('score').textContent = score;
+        if ('speechSynthesis' in window) {
+          const utter = new SpeechSynthesisUtterance('lose 20,000 points, restart round');
+          utter.pitch = 0.8;
+          utter.rate = 1.1;
+          speechSynthesis.speak(utter);
+        }
         found = 0;
         document.getElementById('found').textContent = '0';
         message.textContent = "GRINCH! All gifts stolen & scattered!";
@@ -340,9 +359,9 @@ canvas.addEventListener('click', (e) => {
           document.getElementById('score').textContent = score;
 
           if (level === 10) {
-            message.textContent = `YOU WIN CHRISTMAS! Total Score: ${score} points! 🎉`;
-            document.querySelector('button').style.display = 'block';
-            document.querySelector('button').textContent = 'Play Again';
+            message.textContent = 'congratulations Santa is coming because you are exceptional. Now go do something nice for mommy.';
+            document.querySelector('button:not(#restartBtn)').style.display = 'block';
+            document.querySelector('button:not(#restartBtn)').textContent = 'Play Again';
           } else {
             message.textContent = `Level ${level} Complete! +${bonus} bonus points! Get ready...`;
             setTimeout(() => {

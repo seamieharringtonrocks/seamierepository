@@ -53,7 +53,7 @@
   <div id="ui">
     <div>Level: <span id="level">1</span>/10</div>
     <div>Gifts Found: <span id="found">0</span>/20</div>
-    <div>Time Left: <span id="timer">90</span>s</div>
+    <div>Time Left: <span id="timer">30</span>s</div>
   </div>
   <canvas id="canvas" width="1000" height="600"></canvas>
   <div id="message">Click Start to begin the holiday madness!</div>
@@ -69,7 +69,7 @@ const giftEmojis = ['🎁','🧦','🧸','📚','🎮','🚀','🧣','🎧','�
 
 let level = 1;
 let found = 0;
-let timer = 90;
+let timer = 30;
 let timerInterval;
 let animationFrame;
 let gifts = [];
@@ -102,9 +102,8 @@ function startLevel() {
   document.getElementById('found').textContent = '0';
   document.getElementById('level').textContent = level + " — " + levelNames[level];
 
-  // Timer gets 5 seconds harder each level (90 → 45s by level 10)
-  timer = 95 - (level * 5);
-  if (timer < 30) timer = 30;
+  // Timer now starts at 30s max and decreases by 5s per level (minimum 5s)
+  timer = Math.max(5, 35 - (level * 5));
 
   document.getElementById('timer').textContent = timer;
 

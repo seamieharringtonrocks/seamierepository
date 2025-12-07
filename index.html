@@ -4,45 +4,45 @@
 <meta charset="UTF-8">
 <title>Christmas Gift Hunt - 10 Levels of Timed Chaos</title>
 <style>
-  body {
-    margin: 0;
-    background: #000;
-    color: #fff;
-    font-family: Arial, sans-serif;
+  body { 
+    margin: 0; 
+    background: #000; 
+    color: #fff; 
+    font-family: Arial, sans-serif; 
     text-align: center;
   }
   h1 { margin: 20px; font-size: 2.5em; }
-  #ui {
-    padding: 10px;
-    font-size: 1.4em;
+  #ui { 
+    padding: 10px; 
+    font-size: 1.4em; 
     background: rgba(0,0,0,0.6);
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 30px;
+    position: absolute; 
+    top: 0; left: 0; right: 0; 
+    display: flex; 
+    justify-content: center; 
+    gap: 30px; 
     flex-wrap: wrap;
   }
-  canvas {
-    display: block;
-    margin: 0 auto;
-    border: 4px solid #0f0;
-    border-radius: 12px;
+  canvas { 
+    display: block; 
+    margin: 0 auto; 
+    border: 4px solid #0f0; 
+    border-radius: 12px; 
     box-shadow: 0 0 30px #0f0;
   }
-  #message {
-    margin: 20px;
-    font-size: 2em;
-    font-weight: bold;
+  #message { 
+    margin: 20px; 
+    font-size: 2em; 
+    font-weight: bold; 
     min-height: 60px;
   }
-  button {
-    padding: 12px 24px;
-    font-size: 1.2em;
-    background: #d32f2f;
-    color: white;
-    border: none;
-    border-radius: 8px;
+  button { 
+    padding: 12px 24px; 
+    font-size: 1.2em; 
+    background: #d32f2f; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
     cursor: pointer;
   }
   button:hover { background: #ff1744; }
@@ -190,10 +190,10 @@ function playMusic() {
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
   if (musicTimeout) clearTimeout(musicTimeout);
-
+  
   const melody = melodies[level];
   const tempo = 340;
-
+  
   let i = 0;
   function nextNote() {
     if (i >= melody.length) i = 0;
@@ -227,32 +227,32 @@ function startLevel() {
   found = 0;
   document.getElementById('found').textContent = '0';
   document.getElementById('level').textContent = level + " — " + levelNames[level];
-
+  
   timer = Math.max(15, 30 - (level - 1) * 2);
   document.getElementById('timer').textContent = timer;
-
+  
   const grinchCount = Math.min(level + 1, 8);
-
+  
   const shuffledGood = giftEmojis.slice().sort(() => Math.random() - 0.5);
-
+  
   gifts = [];
   const placed = [];
   const minDist = 120;
-
+  
   let goodIndex = 0;
   for (let i = 0; i < 20 + grinchCount; i++) {
     const isGrinch = i < grinchCount;
-    const emoji = isGrinch
+    const emoji = isGrinch 
       ? giftEmojis[Math.floor(Math.random() * giftEmojis.length)]
       : shuffledGood[goodIndex++];
-
+    
     let x, y, attempts = 0;
     do {
       x = 100 + Math.random() * 800;
       y = 100 + Math.random() * 400;
       attempts++;
     } while (placed.some(p => Math.hypot(p.x - x, p.y - y) < minDist) && attempts < 300);
-
+    
     gifts.push({
       x, y,
       emoji,
@@ -262,7 +262,7 @@ function startLevel() {
     });
     placed.push({x, y});
   }
-
+  
   snowflakes = [];
   if (level !== 6 && level !== 7) {
     for (let i = 0; i < 220; i++) {
@@ -274,7 +274,7 @@ function startLevel() {
       });
     }
   }
-
+  
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timer--;
@@ -284,7 +284,7 @@ function startLevel() {
       message.textContent = "Time's Up! Click canvas to retry level.";
     }
   }, 1000);
-
+  
   playMusic();
   draw();
   loop();
@@ -309,17 +309,17 @@ function drawBackground() {
   }
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1000, 600);
-
+  
   ctx.fillStyle = (level === 6 || level === 7) ? '#FFE4B5' : '#f8fdfc';
   ctx.fillRect(0, 450, 1000, 150);
-
+  
   // All ultra-detailed hand-drawn Canvas backgrounds exactly as in the last working version
 }
 
 function draw() {
   ctx.clearRect(0, 0, 1000, 600);
   drawBackground();
-
+  
   snowflakes.forEach(s => {
     ctx.font = s.size + 'px serif';
     ctx.fillStyle = 'rgba(255,255,255,0.98)';
@@ -328,7 +328,7 @@ function draw() {
     if (s.y > 600) s.y = -20;
     s.x += Math.sin(Date.now() / 1000 + s.x) * 1.5;
   });
-
+  
   gifts.forEach(g => {
     if (!g.collected) {
       const pulse = g.isGrinch ? 1 + Math.sin(Date.now() / 500 + g.phase) * 0.175 : 1;
@@ -336,7 +336,7 @@ function draw() {
       ctx.translate(g.x, g.y);
       ctx.scale(pulse, pulse);
       ctx.translate(-g.x, -g.y);
-
+      
       ctx.font = '60px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -344,7 +344,7 @@ function draw() {
       ctx.shadowColor = g.isGrinch ? 'rgba(100,255,100,0.4)' : '#00000066';
       ctx.fillStyle = '#ffffff';
       ctx.fillText(g.emoji, g.x, g.y);
-
+      
       ctx.restore();
     }
   });
@@ -358,16 +358,16 @@ function loop() {
 // Mobile audio unlock on every tap/click
 canvas.addEventListener('click', (e) => {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-
+  
   if (timer <= 0) {
     startLevel();
     return;
   }
-
+  
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
-
+  
   for (const g of gifts) {
     if (!g.collected && Math.hypot(mx - g.x, my - g.y) < 50) {
       if (g.isGrinch) {
@@ -380,7 +380,7 @@ canvas.addEventListener('click', (e) => {
         message.textContent = "GRINCH! All gifts stolen & scattered!";
         timer -= 15;
         if (timer < 0) timer = 0;
-
+        
         const placed = [];
         const shuffledGood = giftEmojis.slice().sort(() => Math.random() - 0.5);
         let goodIndex = 0;
@@ -401,18 +401,18 @@ canvas.addEventListener('click', (e) => {
         g.collected = true;
         found++;
         document.getElementById('found').textContent = found;
-
+        
         if (found === 20) {
           [1000, 1200, 1400, 1800].forEach((f, i) => setTimeout(() => playSound(f, 0.2, 'triangle', 0.25), i*120));
-
+          
           clearInterval(timerInterval);
           cancelAnimationFrame(animationFrame);
           if (musicTimeout) clearTimeout(musicTimeout);
-
+          
           const bonus = timer * 5432;
           score += bonus;
           document.getElementById('score').textContent = score;
-
+          
           if (level === 10) {
             message.textContent = 'congratulations Santa is coming because you are exceptional. Now go do something nice for mommy.';
             document.querySelector('button:not(#restartBtn)').style.display = 'block';

@@ -184,4 +184,122 @@ function drawBackground() {
     ctx.beginPath();
     ctx.arc(800, 120, 80, 0, Math.PI * 2);
     ctx.fill();
-  } else if (level ===
+  } else if (level === 9) {
+    // Philippine parol lanterns
+    for (let i = 0; i < 8; i++) {
+      ctx.fillStyle = ['#FF0000','#FFFF00','#00FF00','#0000FF'][i%4];
+      ctx.font = '80px serif';
+      ctx.fillText('✨', 150 + i * 100, 200);
+    }
+  } else {
+    // Traditional Christmas tree (bigger on early levels)
+    ctx.fillStyle = '#0A5';
+    const treeHeight = 280 - level * 10;
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(500, 100 + i * 70);
+      ctx.lineTo(500 - (200 - i * 30), 220 + i * 70);
+      ctx.lineTo(500 + (200 - i * 30), 220 + i * 70);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = '#FF0';
+    ctx.fillText('⭐', 480, 90);
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, 1000, 600);
+  drawBackground();
+
+  // Falling snow (or sparkles on tropical levels)
+  snowflakes.forEach(s => {
+    ctx.font = s.size + 'px serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillText('❄', s.x, s.y);
+    s.y += s.speed;
+    if (s.y > 600) s.y = -20;
+  });
+
+  // Draw gifts
+  gifts.forEach(g => {
+    if (!g.collected) {
+      ctx.font = '60px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Grinch gifts have a subtle pulsing green bezel as hint
+      if (g.isGrinch) {
+        const pulse = 30 + Math.sin(Date.now() / 200) * 10;
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, pulse, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillText(g.emoji, g.x, g.y);
+    }
+  });
+}
+
+function loop() {
+  draw();
+  animationFrame = requestAnimationFrame(loop);
+}
+
+canvas.addEventListener('click', (e) => {
+  if (timer <= 0) {
+    startLevel(); // retry on click when time's up
+    return;
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  for (const g of gifts) {
+    if (!g.collected && Math.hypot(mx - g.x, my - g.y) < 50) {
+      if (g.isGrinch) {
+        // GRINCH! Lose all progress and gifts scatter again
+        found = 0;
+        document.getElementById('found').textContent = '0';
+        message.textContent = "GRINCH! All gifts stolen & scattered!";
+        timer -= 15; // extra time penalty
+        if (timer < 0) timer = 0;
+
+        // Respawn everything in new positions
+        gifts.forEach(gift => {
+          gift.collected = false;
+          gift.x = 100 + Math.random() * 800;
+          gift.y = 100 + Math.random() * 400;
+        });
+      } else {
+        g.collected = true;
+        found++;
+        document.getElementById('found').textContent = found;
+
+        if (found === 20) {
+          clearInterval(timerInterval);
+          cancelAnimationFrame(animationFrame);
+          if (level === 10) {
+            message.textContent = "YOU WIN CHRISTMAS! 🎉 All 200 gifts saved!";
+            document.querySelector('button').style.display = 'block';
+            document.querySelector('button').textContent = 'Play Again';
+          } else {
+            message.textContent = `Level ${level} Complete! Get ready...`;
+            setTimeout(() => {
+              level++;
+              startLevel();
+            }, 2500);
+          }
+        }
+      }
+      draw();
+      break;
+    }
+  }
+});
+</script>
+</body>
+</html>

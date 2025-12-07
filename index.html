@@ -10,6 +10,7 @@
     color: #fff; 
     font-family: Arial, sans-serif; 
     text-align: center;
+    touch-action: none; /* prevents scrolling on mobile */
   }
   h1 { margin: 20px; font-size: 2.5em; }
   #ui { 
@@ -22,6 +23,7 @@
     justify-content: center; 
     gap: 30px; 
     flex-wrap: wrap;
+    z-index: 10;
   }
   canvas { 
     display: block; 
@@ -29,6 +31,9 @@
     border: 4px solid #0f0; 
     border-radius: 12px; 
     box-shadow: 0 0 30px #0f0;
+    touch-action: none;
+    cursor: pointer;
+    user-select: none;
   }
   #message { 
     margin: 20px; 
@@ -112,7 +117,7 @@ const notes = {
   'C6': 1046.50, 'D6': 1174.66, 'E6': 1318.51
 };
 
-// All melodies shifted up exactly one octave (brighter but still pleasant, not piercing)
+// All melodies shifted up one octave (bright & festive)
 const melodies = [
   [], // index 0 unused
   [//1 Jingle Bells – full
@@ -175,6 +180,7 @@ const melodies = [
 
 function playSound(freq, dur = 0.1, type = 'triangle', vol = 0.18) {
   if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   const osc = audioCtx.createOscillator();
   osc.type = type;
   osc.frequency.value = freq;
@@ -355,8 +361,8 @@ function loop() {
   animationFrame = requestAnimationFrame(loop);
 }
 
-// Mobile audio unlock on every tap/click
-canvas.addEventListener('click', (e) => {
+// Universal pointer handler – works perfectly on desktop mouse AND mobile touch
+canvas.addEventListener('pointerdown', (e) => {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   
   if (timer <= 0) {
@@ -430,12 +436,6 @@ canvas.addEventListener('click', (e) => {
       break;
     }
   }
-});
-
-// Extra mobile touch unlock
-canvas.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 });
 </script>
 </body>

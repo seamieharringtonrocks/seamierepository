@@ -2,106 +2,186 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Christmas Gift Hunt 2025</title>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Christmas Gift Hunt - 10 Levels of Timed Chaos</title>
 <style>
-  body{margin:0;overflow:hidden;background:#000;font-family:Arial,sans-serif;background:#111}
-  canvas{display:block}
-  #ui{position:absolute;inset:0;pointer-events:none;color:#fff;text-shadow:0 0 10px #000}
-  #timer,#gifts,#levelName{position:absolute;font-size:24px;padding:10px;background:rgba(0,0,0,0.5);border-radius:10px}
-  #timer{top:0;right:0}
-  #gifts{top:0;left:0}
-  #levelName{bottom:10px;left:50%;transform:translateX(-50%);font-size:28px}
-  #start,#gameOver,#levelSelect{position:absolute;inset:0;background:rgba(0,0,0,0.9);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-  button{margin-top:30px;padding:15px 40px;font-size:24px;background:#c00;color:#fff;border:none;border-radius:3px solid #f00;border-radius:15px;cursor:pointer}
-  button:active{background:#900}
-  .locked{opacity:0.4;pointer-events:none}
+  body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  h1 { margin: 20px; font-size: 2.5em; }
+  #ui {
+    padding: 10px;
+    font-size: 1.4em;
+    background: rgba(0,0,0,0.6);
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  canvas {
+    display: block;
+    margin: 0 auto;
+    border: 4px solid #0f0;
+    border-radius: 12px;
+    box-shadow: 0 0 30px #0f0;
+  }
+  #message {
+    margin: 20px;
+    font-size: 2em;
+    font-weight: bold;
+    min-height: 60px;
+  }
+  button {
+    padding: 12px 24px;
+    font-size: 1.2em;
+    background: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover { background: #ff1744; }
 </style>
 </head>
 <body>
-
-<canvas id="c"></canvas>
-
-<div id="ui">
-  <div id="timer"></div>
-  <div id="gifts"></div>
-  <div id="levelName"></div>
-</div>
-
-<div id="start">
-  <h1>Christmas Gift Hunt 2025</h1>
-  <p>Tap 20 gifts before time runs out!<br>Beware of the Grinch!</p>
-  <button onclick="showLevelSelect()">PLAY</button>
-</div>
-
-<div id="levelSelect" style="display:none"></div>
-
-<div id="gameOver" style="display:none">
-  <h1 id="result"></h1>
-  <p id="scoreText"></p>
-  <button onclick="shareResult()">Share</button>
-  <button onclick="showLevelSelect()">Levels</button>
-  <button onclick="location.reload()">Again</button>
-</div>
-
-<audio id="music" loop></audio>
+  <h1>Christmas Gift Hunt</h1>
+  <div id="ui">
+    <div>Level: <span id="level">1</span>/10</div>
+    <div>Gifts Found: <span id="found">0</span>/20</div>
+    <div>Time Left: <span id="timer">90</span>s</div>
+  </div>
+  <canvas id="canvas" width="1000" height="600"></canvas>
+  <div id="message">Click Start to begin the holiday madness!</div>
+  <button onclick="startGame()">Start Game</button>
 
 <script>
-// ================ LEVELS (fixed syntax!) ================
-const levels = [
-  {name:"Cozy Living Room",          time:90,  grinches:0,  bg:"#2c3e50", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_98d1679e8a.mp3"},
-  {name:"Snowy Village Night",       time:80,  grinches:0,  bg:"#0f1b2a", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2d7d69f5c9.mp3"},
-  {name:"Santa's Workshop",          time:70,  grinches:2,  bg:"#5d1a1a", music:"https://cdn.pixabay.com/download/audio/2022/11/08/audio_2d8f8c68d5.mp3"},
-  {name:"Gingerbread House",         time:65,  grinches:3,  bg:"#8b4513", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_2f1c0c06f9.mp3"},
-  {name:"Australian Beach Christmas",time:60,  grinches:4,  bg:"#87CEEB", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_2f8c0c06f0.mp3"},
-  {name:"Enchanted Forest",          time:55,  grinches:8,  bg:"#0a2a0a", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_5e8f8c68d5.mp3"},
-  {name:"North Pole Blizzard",       time:50,  grinches:12, bg:"#112233", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_9d7d69f5c9.mp3"},
-  {name:"Grinch's Mountain Lair",    time:45,  grinches:18, bg:"#1a1a2e", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_7f1c0c06f9.mp3"},
-  {name:"Tropical Hawaiian Christmas",time:40, grinches:25, bg:"#006994", music:"https://cdn.pixabay.com/download/audio/2023/11/27/audio_1f8c0c06f0.mp3"},
-  {name:"Midnight Rooftop Rush",     time:35,  grinches:35, bg:"#0d001a", music:"https://cdn.pixabay.com/download/audio/2023/12/05/audio_9f1c0c06f9.mp3"}
+// Everything is 100% self-contained — no external images, no links, no server needed.
+// Works perfectly on GitHub Pages — just upload this single index.html file.
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const giftEmojis = ['🎁','🧦','🧸','📚','🎮','🚀','🧣','🎧','🍫','🧩','🤖','🚁','🖍️','🎨','🥁','🎸','🧤','📱','⌚','🧭'];
+
+let level = 1;
+let found = 0;
+let timer = 90;
+let timerInterval;
+let animationFrame;
+let gifts = [];
+let snowflakes = [];
+let message = document.getElementById('message');
+
+const levelNames = [
+  "", // index 0 unused
+  "North Pole Classic",
+  "New York Rooftop Snow",
+  "German Christmas Market",
+  "Swedish Lucia Night",
+  "Mexican Posada Party",
+  "Australian Beach Christmas",
+  "Brazilian Tropical Noël",
+  "Japanese Strawberry Cake",
+  "Philippine Parol Lanterns",
+  "Global Holiday Finale"
 ];
 
-let c = document.getElementById("c");
-let ctx = c.getContext("2d");
-let music = document.getElementById("music");
-let currentLevel = 0, giftsFound = 0, timeLeft = 0, objects = [];
-let unlocked = localStorage.getItem("xmas2025") ? +localStorage.getItem("xmas2025") : 0;
+function startGame() {
+  level = 1;
+  message.textContent = "Find the 20 gifts before time runs out!";
+  document.querySelector('button').style.display = 'none';
+  startLevel();
+}
 
-function resize(){c.width=innerWidth;c.height=innerHeight}
-window.onresize=resize; resize();
+function startLevel() {
+  found = 0;
+  document.getElementById('found').textContent = '0';
+  document.getElementById('level').textContent = level + " — " + levelNames[level];
 
-class Gift{
-  constructor(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.size=30+Math.random()*30}
-  draw(){
-    ctx.fillStyle="#c00";ctx.fillRect(this.x-this.size/2,this.y-this.size/2,this.size,this.size);
-    ctx.fillStyle="#ff0";ctx.fillRect(this.x-this.size/2,this.y-this.size/2,this.size,this.size/6);
+  // Timer gets 5 seconds harder each level (90 → 45s by level 10)
+  timer = 95 - (level * 5);
+  if (timer < 30) timer = 30;
+
+  document.getElementById('timer').textContent = timer;
+
+  // Number of hidden Grinches increases with level (max 8)
+  const grinchCount = Math.min(level + 1, 8);
+
+  gifts = [];
+  for (let i = 0; i < 20 + grinchCount; i++) {  // extra positions for Grinches
+    gifts.push({
+      x: 100 + Math.random() * 800,
+      y: 100 + Math.random() * 400,
+      emoji: giftEmojis[Math.floor(Math.random() * giftEmojis.length)],
+      isGrinch: i < grinchCount,
+      collected: false
+    });
   }
-}
-class Grinch{
-  constructor(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.size=40+Math.random()*40}
-  draw(){
-    ctx.fillStyle="#0a0";ctx.fillRect(this.x-this.size/2,this.y-this.size/2,this.size,this.size);
-    ctx.fillStyle="#050";ctx.fillRect(this.x-this.size/2+5,this.y-this.size/2+5,this.size,this.size); // subtle bevel hint
+
+  // Shuffle so Grinches are truly hidden among gifts
+  gifts.sort(() => Math.random() - 0.5);
+
+  // Snowflakes (disabled on beach levels)
+  snowflakes = [];
+  if (level !== 6 && level !== 7) {
+    for (let i = 0; i < 120; i++) {
+      snowflakes.push({
+        x: Math.random() * 1000,
+        y: Math.random() * 600,
+        speed: 0.5 + Math.random() * 1.5,
+        size: 10 + Math.random() * 20
+      });
+    }
   }
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timer--;
+    document.getElementById('timer').textContent = timer;
+    if (timer <= 0) {
+      clearInterval(timerInterval);
+      message.textContent = "Time's Up! Click canvas to retry level.";
+    }
+  }, 1000);
+
+  draw();
+  loop();
 }
 
-function spawn(){
-  objects=[];
-  for(let i=0;i<20;i++)objects.push(new Gift());
-  for(let i=0;i<levels[currentLevel].grinches;i++)objects.push(new Grinch());
-}
+function drawBackground() {
+  // Sky gradient changes per level theme
+  const grad = ctx.createLinearGradient(0, 0, 0, 600);
+  if (level === 6 || level === 7) {
+    // Beach / Tropical
+    grad.addColorStop(0, '#87CEEB');
+    grad.addColorStop(1, '#FFD700');
+  } else if (level === 5 || level === 7) {
+    // Mexico / Brazil vibrant
+    grad.addColorStop(0, '#FF1493');
+    grad.addColorStop(1, '#00CED1');
+  } else if (level === 1) {
+    grad.addColorStop(0, '#000033');
+    grad.addColorStop(1, '#0f3066');
+  } else {
+    grad.addColorStop(0, '#001133');
+    grad.addColorStop(1, '#003366');
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1000, 600);
 
-function loop(){
-  timeLeft-=1/60;
-  if(timeLeft<=0)gameOver(false);
-  ctx.fillStyle=levels[currentLevel].bg;ctx.fillRect(0,0,c.width,c.height);
-  objects.forEach(o=>o.draw());
-  document.getElementById("timer").textContent=`Time: ${Math.ceil(timeLeft)}s`;
-  document.getElementById("gifts").textContent=`Gifts: ${giftsFound}/20`;
-  requestAnimationFrame(loop);
-}
+  // Ground
+  ctx.fillStyle = (level === 6 || level === 7) ? '#FFE4B5' : '#ffffff';
+  ctx.fillRect(0, 450, 1000, 150);
 
-c.onclick=c.ontouchstart=e=>{
-  e.preventDefault();
-  let r=c.getBoundingClientRect();
-  let x=(e.touches?e.touches[0].clientX:e.clientX)-r
+  // Level-specific centerpiece
+  if (level === 6) {
+    // Aussie beach — big yellow sun
+    ctx.fillStyle = '#FFFF00';
+    ctx.beginPath();
+    ctx.arc(800, 120, 80, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (level ===

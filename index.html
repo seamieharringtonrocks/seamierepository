@@ -61,7 +61,6 @@
 
 <script>
 // Everything is 100% self-contained — no external images, no links, no server needed.
-// Works perfectly on GitHub Pages — just upload this single index.html file.
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -102,16 +101,15 @@ function startLevel() {
   document.getElementById('found').textContent = '0';
   document.getElementById('level').textContent = level + " — " + levelNames[level];
 
-  // Timer now starts at 30s max and decreases by 5s per level (minimum 5s)
+  // Timer: max 30s → 5s
   timer = Math.max(5, 35 - (level * 5));
 
   document.getElementById('timer').textContent = timer;
 
-  // Number of hidden Grinches increases with level (max 8)
   const grinchCount = Math.min(level + 1, 8);
 
   gifts = [];
-  for (let i = 0; i < 20 + grinchCount; i++) {  // extra positions for Grinches
+  for (let i = 0; i < 20 + grinchCount; i++) {
     gifts.push({
       x: 100 + Math.random() * 800,
       y: 100 + Math.random() * 400,
@@ -121,12 +119,11 @@ function startLevel() {
     });
   }
 
-  // Shuffle so Grinches are truly hidden among gifts
   gifts.sort(() => Math.random() - 0.5);
 
-  // Snowflakes (disabled on beach levels)
+  // No snow on tropical/warm levels
   snowflakes = [];
-  if (level !== 6 && level !== 7) {
+  if (![5,6,7,9].includes(level)) {
     for (let i = 0; i < 120; i++) {
       snowflakes.push({
         x: Math.random() * 1000,
@@ -152,92 +149,150 @@ function startLevel() {
 }
 
 function drawBackground() {
-  // Sky gradient changes per level theme
   const grad = ctx.createLinearGradient(0, 0, 0, 600);
+
+  // Sky & ground per theme
   if (level === 6 || level === 7) {
-    // Beach / Tropical
     grad.addColorStop(0, '#87CEEB');
     grad.addColorStop(1, '#FFD700');
-  } else if (level === 5 || level === 7) {
-    // Mexico / Brazil vibrant
+    ctx.fillStyle = '#FFE4B5'; // sand
+  } else if (level === 5) {
     grad.addColorStop(0, '#FF1493');
     grad.addColorStop(1, '#00CED1');
-  } else if (level === 1) {
-    grad.addColorStop(0, '#000033');
-    grad.addColorStop(1, '#0f3066');
+    ctx.fillStyle = '#ffffff';
   } else {
     grad.addColorStop(0, '#001133');
     grad.addColorStop(1, '#003366');
+    ctx.fillStyle = '#ffffff';
   }
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1000, 600);
 
-  // Ground
   ctx.fillStyle = (level === 6 || level === 7) ? '#FFE4B5' : '#ffffff';
   ctx.fillRect(0, 450, 1000, 150);
 
-  // Level-specific centerpiece
-  if (level === 6) {
-    // Aussie beach — big yellow sun
-    ctx.fillStyle = '#FFFF00';
-    ctx.beginPath();
-    ctx.arc(800, 120, 80, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (level === 9) {
-    // Philippine parol lanterns
-    for (let i = 0; i < 8; i++) {
-      ctx.fillStyle = ['#FF0000','#FFFF00','#00FF00','#0000FF'][i%4];
-      ctx.font = '80px serif';
-      ctx.fillText('✨', 150 + i * 100, 200);
-    }
-  } else {
-    // Traditional Christmas tree (bigger on early levels)
-    ctx.fillStyle = '#0A5';
-    const treeHeight = 280 - level * 10;
-    for (let i = 0; i < 4; i++) {
-      ctx.beginPath();
-      ctx.moveTo(500, 100 + i * 70);
-      ctx.lineTo(500 - (200 - i * 30), 220 + i * 70);
-      ctx.lineTo(500 + (200 - i * 30), 220 + i * 70);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.fillStyle = '#FF0';
-    ctx.fillText('⭐', 480, 90);
+  // Level-specific decorations (emoji scenery)
+  const dec = [];
+
+  if (level === 1) { // North Pole
+    dec.push({e:'🎅',x:460,y:320,size:140});
+    dec.push({e:'🦌',x:620,y:520,size:90});
+    dec.push({e:'🦌',x:340,y:520,size:90});
+    dec.push({e:'🛷',x:180,y:540,size:100});
+    dec.push({e:'🌌',x:500,y:80,size:160});
   }
+  else if (level === 2) { // New York Rooftop
+    dec.push({e:'🗽',x:750,y:520,size:120});
+    dec.push({e:'🚕',x:220,y:560,size:80});
+    dec.push({e:'🚕',x:780,y:560,size:80});
+    dec.push({e:'🌆',x:500,y:280,size:200});
+    dec.push({e:'🌉',x:140,y:420,size:110});
+  }
+  else if (level === 3) { // German Market
+    dec.push({e:'🥨',x:200,y:520,size:100});
+    dec.push({e:'🥨',x:800,y:520,size:100});
+    dec.push({e:'🍺',x:380,y:540,size:90});
+    dec.push({e:'🍷',x:620,y:540,size:90});
+    dec.push({e:'🎄',x:500,y:380,size:180});
+    dec.push({e:'🔔',x:500,y:180,size:80});
+  }
+  else if (level === 4) { // Swedish Lucia
+    dec.push({e:'🕯️',x:200,y:520,size:100});
+    dec.push({e:'🕯️',x:320,y:500,size:100});
+    dec.push({e:'🕯️',x:440,y:520,size:100});
+    dec.push({e:'🕯️',x:560,y:500,size:100});
+    dec.push({e:'🕯️',x:680,y:520,size:100});
+    dec.push({e:'🕯️',x:800,y:520,size:100});
+    dec.push({e:'⭐',x:500,y:140,size:140});
+    dec.push({e:'👼',x:500,y:340,size:120});
+  }
+  else if (level === 5) { // Mexican Posada
+    dec.push({e:'🪅',x:500,y:180,size:160});
+    dec.push({e:'🎉',x:200,y:320,size:120});
+    dec.push({e:'🎉',x:800,y:320,size:120});
+    dec.push({e:'🌶️',x:300,y:540,size:90});
+    dec.push({e:'🌶️',x:700,y:540,size:90});
+    dec.push({e:'🌸',x:500,y:520,size:100});
+  }
+  else if (level === 6) { // Australian Beach
+    dec.push({e:'🌞',x:820,y:100,size:140});
+    dec.push({e:'🏄',x:300,y:520,size:110});
+    dec.push({e:'🦘',x:680,y:520,size:130});
+    dec.push({e:'🍤',x:500,y:560,size:100}); // prawn on the barbie
+    dec.push({e:'🏖️',x:140,y:540,size:100});
+  }
+  else if (level === 7) { // Brazilian Tropical
+    dec.push({e:'🌴',x:180,y:380,size:180});
+    dec.push({e:'🌴',x:820,y:400,size:180});
+    dec.push({e:'🦜',x:500,y:160,size:120});
+    dec.push({e:'🎶',x:380,y:300,size:100});
+    dec.push({e:'🎶',x:620,y:300,size:100});
+    dec.push({e:'🏖️',x:500,y:560,size:110});
+  }
+  else if (level === 8) { // Japanese Strawberry Cake
+    dec.push({e:'🍰',x:500,y:380,size:200});
+    dec.push({e:'🍓',x:380,y:280,size:90});
+    dec.push({e:'🍓',x:620,y:280,size:90});
+    dec.push({e:'🍓',x:470,y:320,size:80});
+    dec.push({e:'🍓',x:530,y:320,size:80});
+    dec.push({e:'⛄',x:200,y:520,size:110});
+    dec.push({e:'🎅',x:800,y:520,size:110});
+  }
+  else if (level === 9) { // Philippine Parol
+    dec.push({e:'⭐',x:300,y:180,size:160,color:'#FF0000'});
+    dec.push({e:'⭐',x:500,y:120,size:200,color:'#FFFF00'});
+    dec.push({e:'⭐',x:700,y:180,size:160,color:'#00FF00'});
+    dec.push({e:'🏮',x:200,y:420,size:130});
+    dec.push({e:'🏮',x:800,y:420,size:130});
+    dec.push({e:'🎄',x:500,y:480,size:140});
+  }
+  else if (level === 10) { // Global Finale
+    dec.push({e:'🌍',x:500,y:320,size:240});
+    dec.push({e:'🎆',x:200,y:160,size:160});
+    dec.push({e:'🎆',x:800,y:160,size:160});
+    dec.push({e:'🎉',x:340,y:520,size:130});
+    dec.push({e:'🎉',x:660,y:520,size:130});
+    dec.push({e:'🥳',x:500,y:500,size:140});
+  }
+
+  dec.forEach(d => {
+    ctx.font = `${d.size || 100}px serif`;
+    ctx.fillStyle = d.color || '#ffffff';
+    ctx.fillText(d.e, d.x, d.y);
+  });
 }
 
 function draw() {
   ctx.clearRect(0, 0, 1000, 600);
   drawBackground();
 
-  // Falling snow (or sparkles on tropical levels)
+  // Snow / sparkles
   snowflakes.forEach(s => {
     ctx.font = s.size + 'px serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
     ctx.fillText('❄', s.x, s.y);
     s.y += s.speed;
     if (s.y > 600) s.y = -20;
   });
 
-  // Draw gifts
+  // Gifts
   gifts.forEach(g => {
     if (!g.collected) {
       ctx.font = '60px serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      // Grinch gifts have a subtle pulsing green bezel as hint
-      if (g.isGrinch) {
-        const pulse = 30 + Math.sin(Date.now() / 200) * 10;
-        ctx.strokeStyle = '#00ff00';
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.arc(g.x, g.y, pulse, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
+      // Normal gift
+      ctx.fillStyle = '#ffffff';
       ctx.fillText(g.emoji, g.x, g.y);
+
+      // Grinch = subtle static green hue overlay (no ring)
+      if (g.isGrinch) {
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = '#00ff00';
+        ctx.fillText(g.emoji, g.x, g.y);
+        ctx.globalAlpha = 1;
+      }
     }
   });
 }
@@ -249,7 +304,7 @@ function loop() {
 
 canvas.addEventListener('click', (e) => {
   if (timer <= 0) {
-    startLevel(); // retry on click when time's up
+    startLevel();
     return;
   }
 
@@ -260,14 +315,12 @@ canvas.addEventListener('click', (e) => {
   for (const g of gifts) {
     if (!g.collected && Math.hypot(mx - g.x, my - g.y) < 50) {
       if (g.isGrinch) {
-        // GRINCH! Lose all progress and gifts scatter again
         found = 0;
         document.getElementById('found').textContent = '0';
         message.textContent = "GRINCH! All gifts stolen & scattered!";
-        timer -= 15; // extra time penalty
+        timer -= 15;
         if (timer < 0) timer = 0;
 
-        // Respawn everything in new positions
         gifts.forEach(gift => {
           gift.collected = false;
           gift.x = 100 + Math.random() * 800;
